@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Dummy</title>
+    <link rel="icon" type="image/svg+xml" href="dummy.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&display=swap');
+      @import url('https://unpkg.com/normalize.css');
+    </style>
+  </head>
+  <body>
+
+    <div class="h-screen items-center flex flex-col w-full mx-auto">
+      
+      <div class="flex-grow h-full w-full p-10 flex items-center">
+        <div class="w-full md:w-3/4 xl:w-1/2 mx-auto">
+
+          <div class="flex flex-col py-10">
+            <h1 class="font-bold text-4xl py-5 text-center">Dummy</h1>
+            <p class="font-light text-xl text-center">Create fake data for SQL, pandas and Excel</p>
+          </div>
+
+          <div id="response-history" class="w-full flex flex-col">
+            <div class="w-full flex flex-row">
+              <div class="w-1/12 p-3" id="user-icon"></div>
+              <div class="w-11/12 p-3" id="user-message"></div>
+            </div>
+
+            <div class="w-full flex flex-row">
+              <div class="w-1/12 p-3" id="llm-icon"></div>
+              <div class="w-11/12 p-3" id="response"></div>
+            </div>
+          </div>
+
+        </div>
+      
+      </div>
+
+      <div class="h-[150px] bg-gray-50 w-full p-10 flex items-center">
+        <div class="w-full md:w-3/4 xl:w-1/2 flex justify-between mx-auto rounded-lg border p-5">
+          <form id="query-form" class="w-full flex flex-row justify-between">
+            <input
+              autofocus
+              name="query"
+              placeholder="Describe the data you want to create..." 
+              type="text"
+              class="flex-grow bg-transparent focus:outline-none"
+            >
+            </input>
+
+            <!-- <button type="submit" class="w-1/5">Ask</button> -->
+            <div class="w-[50px] flex justify-center">
+              <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium tracking-wide text-white transition-colors duration-200 rounded-md bg-neutral-950 hover:bg-neutral-900 focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 focus:shadow-outline focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-circle-fill" viewBox="0 0 16 16">
+                  <path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0m-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z"/>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      const submitForm = async (formEvent) => {
+        formEvent.preventDefault()
+
+        const userMessage = formEvent.target.query.value;
+        const userMessageDiv = document.getElementById("user-message");
+        userMessageDiv.innerText = userMessage;
+        const userMessageIcon = document.getElementById("user-icon");
+        userMessageIcon.innerText = 'You';
+
+        const url = `/stream?query=${formEvent.target.query.value}`
+        const source = new EventSource(url)
+
+        // Clear existing response before appending new message
+        document.querySelector("div#response").innerHTML = "";
+
+        source.onmessage = (event) => {
+          if (event.data === "[DONE]") {
+            source.close()
+            formEvent.target.query.value = ""
+            return
+          }
+          const data = JSON.parse(event.data)
+          document.querySelector("div#response").innerHTML += data.response
+          
+          const llmMessageIcon = document.getElementById("llm-icon");
+          llmMessageIcon.innerText = 'LLM';
+        }
+      }
+
+      document.querySelector("form#query-form").addEventListener("submit", submitForm)
+    </script>
+    
+  </body>
+</html>
+
+
+
+
+
+<!-- <script>
+      const appendChatBubble = (role, content) => {
+        const chatBubble = document.createElement("div");
+        chatBubble.classList.add("chat-bubble", role);
+        chatBubble.textContent = content;
+        document.querySelector("div#response").appendChild(chatBubble);
+      };
+    
+      const submitForm = async (formEvent) => {
+        formEvent.preventDefault();
+    
+        const url = `/stream?query=${formEvent.target.query.value}`;
+        const source = new EventSource(url);
+    
+        // Clear existing response before appending new message
+        document.querySelector("div#response").innerHTML = "";
+    
+        source.onmessage = (event) => {
+          if (event.data === "[DONE]") {
+            source.close();
+            formEvent.target.query.value = "";
+            return;
+          }
+          const data = JSON.parse(event.data);
+          appendChatBubble("user", formEvent.target.query.value);
+          appendChatBubble("ai", data.response);
+        };
+      };
+    
+      document.querySelector("form#query-form").addEventListener("submit", submitForm);
+    </script> -->
